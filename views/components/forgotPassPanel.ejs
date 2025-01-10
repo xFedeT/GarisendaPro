@@ -1,0 +1,39 @@
+<div class="back-button">
+  <form action="/login">
+    <button class="back-button-instance" type="submit">
+      <span class="material-symbols-outlined arrow">arrow_back_ios</span>
+    </button>
+  </form>
+</div>
+
+<div id="card-forgot">
+    <div id="card-content">
+      <div id="card-title-forgot-pass">
+        <h2>RECUPERA PASSWORD</h2>
+      </div>
+      <div class="form">
+        <label class="login-label" for="user-email" style="padding-top:13px">
+            &nbsp;Codice Censimento
+        </label>
+        <input id="user-email" class="form-content" type="text" name="email" autocomplete="on" required />
+        <div class="form-border"></div>
+        <div id="error" style="display: none;"></div> <!-- Messaggio di errore -->
+        <button id="submit-btn-forgot-pass" onclick="codeNotFound()">RECUPERA</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function codeNotFound() {
+      const errorDiv = document.getElementById("error");
+      errorDiv.style.display = "block";
+
+      const loginButton = document.getElementById("submit-btn-forgot-pass");
+      const currentMargin = loginButton.style.marginTop;
+      const newMargin = currentMargin + 20; 
+      loginButton.style.marginTop = newMargin + 'px';
+
+      errorDiv.innerText = "Codice Inesistente!";
+      console.log("ERRORE RECUPERO PASS!");
+    }
+  </script>

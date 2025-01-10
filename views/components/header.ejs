@@ -1,0 +1,58 @@
+<div class="header">
+  <nav class="nav-custom navbar navbar-expand-lg navbar-light bg-light ">
+    <ul class="navbar-nav mr-auto nav-custom-list">
+      <a class="navbar-icon-header" href="/">
+        <img src="img/logo.png">
+      </a>
+      
+      <form action="/story">
+        <button class="button-common" >Storia</button>
+      </form>
+      
+      <form action="/events">
+        <button class="button-common">Eventi</button>
+      </form>
+      <form action="/branche">
+        <button class="button-common-list">Branche </button>
+      </form>
+
+      <div class="header-right">
+        <% if (user == null) { %>
+          <form action="/login">
+            <button class="button-common-list" type="submit">Login </button>
+          </form>
+        <% } else { %>
+          <div class="dropdown">
+            <a class="profile dropbtn" href="/profile">
+              <img src="img/logo.png">
+            </a>
+            <div class="dropdown-content">
+              <form action="/profile" method="get">
+                <button type="submit">Profilo</button>
+              </form>
+              <form action="/profile/payements" method="get">
+                <button type="submit">Pagamenti</button>
+              </form>
+              <% if (user.admin == true) { %>
+                <form action="/admin" method="get">
+                  <button type="submit">Pannello Admin</button>
+                </form>
+              <% } %>
+              <form action="/forgot-pass" method="get">
+                <button type="submit">Reset Password</button>
+              </form>
+              <form action="/logout" method="get">
+                <button type="submit">Logout</button>
+              </form>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    </ul>
+  </nav>
+  
+  <div class="text-header">
+    <span class="title-text">Agesci Bologna <span class="seven-custom">7</span></span>
+  </div>
+  <div class="header-finish-bar"></div>
+</div>
