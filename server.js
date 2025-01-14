@@ -1,5 +1,7 @@
 var express  = require('express');
 var app      = express();
+require('dotenv').config()
+
 var port     = process.env.PORT || 8080;
 var mongoose = require('mongoose');
 var passport = require('passport');
@@ -10,7 +12,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser   = require('body-parser');
 var session      = require('express-session');
 
-require('dotenv').config()
+
 
 // set the view engine to ejs
 

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <script type="text/javascript">
+    <% if (user == null) { %>
+      window.location.href = '/';  // Redirect to home if no user is logged in
+    <% } %>
+  </script>
+
+  <%- include('../../components/head'); %>
+
+  <style>
+    .admin-dashboard {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 0;
+    }
+
+    .admin-header, .admin-footer {
+      background-color: #333;
+      color: white;
+      padding: 10px 0;
+    }
+
+    .admin-container {
+      width: 80%;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .admin-title, .payment-title, .groups-title {
+      color: #fff;
+      text-align: center;
+    }
+
+    .admin-form {
+      background-color: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .admin-form label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
+      color: #333;
+    }
+
+    .admin-form input,
+    .admin-form select,
+    .admin-form button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+
+    .admin-form button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .admin-form button:hover {
+      background-color: #45a049;
+    }
+
+    .group-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .group-list li {
+      background-color: #f9f9f9;
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .group-list li ul {
+      padding-left: 20px;
+    }
+
+    .group-list li ul li {
+      font-size: 14px;
+      color: #555;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .group-list li ul li button {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+
+    .group-list li ul li button:hover {
+      background-color: #e53935;
+    }
+
+    /* Card edit-group a schermo */
+    .edit-group-card {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.5); /* Sfondo semitrasparente */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+
+    .edit-group-card-content {
+      background-color: #fff;
+      width: 60%;
+      max-width: 900px;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      overflow-y: auto;
+    }
+
+    .edit-group-card input {
+      width: 100%;
+      margin-bottom: 15px;
+    }
+
+    .edit-group-card .user-list-container {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .edit-group-card .user-list {
+      width: 45%;
+      background-color: #f4f4f4;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    .edit-group-card .user-list h3 {
+      text-align: center;
+      color: #333;
+    }
+
+    .user-item {
+      padding: 8px;
+      background-color: #fff;
+      margin: 5px 0;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+    }
+
+    .user-item:hover {
+      background-color: #f1f1f1;
+    }
+
+    .user-item span {
+      display: block;
+      font-size: 16px;
+      color: #333;
+    }
+
+    .edit-group-card button {
+      width: 48%;
+      margin-right: 4%;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .edit-group-card button:hover {
+      background-color: #45a049;
+    }
+
+    .cancel-btn {
+      background-color: #f44336;
+    }
+
+    .cancel-btn:hover {
+      background-color: #e53935;
+    }
+
+  </style>
+</head>
+
+<body class="admin-dashboard">
+
+  <header class="admin-header">
+    <%- include('../../components/header'); %>
+  </header>
+
+  <main>
+    <div class="admin-container">
+      <h1 class="admin-title">Admin Dashboard</h1>
+
+      <!-- Payment Form -->
+      <section class="admin-form-section">
+        <h2 class="payment-title">Aggiungi Pagamento</h2>
+        <form action="/admin/payments" method="POST" class="admin-form">
+          <label for="amount">Importo:</label>
+          <input type="number" name="amount" id="amount" required>
+
+          <label for="userOrGroup">Assegna a:</label>
+          <select name="userOrGroup" id="userOrGroup" required>
+            <option value="user">Singolo Utente</option>
+            <option value="group">Gruppo</option>
+          </select>
+
+          <div id="userSelect" style="display: none;">
+            <label for="user">Seleziona Utente:</label>
+            <select name="user" id="user">
+              <% users.forEach(function(user) { %>
+                <option value="<%= user._id %>"><%= user.email %></option>
+              <% }); %>
+            </select>
+          </div>
+
+          <div id="groupSelect" style="display: none;">
+            <label for="group">Seleziona Gruppo:</label>
+            <select name="group" id="group">
+              <% groups.forEach(function(group) { %>
+                <option value="<%= group._id %>"><%= group.name %></option>
+              <% }); %>
+            </select>
+          </div>
+
+          <button type="submit">Aggiungi Pagamento</button>
+        </form>
+      </section>
+
+      <!-- Form to Create Group -->
+      <section class="admin-form-section">
+        <h2 class="groups-title">Crea Gruppo</h2>
+        <form action="/admin/groups" method="POST" class="admin-form">
+          <label for="groupName">Nome del Gruppo:</label>
+          <input type="text" name="groupName" id="groupName" required>
+
+          <label for="users">Aggiungi Membri al Gruppo:</label>
+          <select multiple name="users[]" id="users" required>
+            <% users.forEach(function(user) { %>
+              <option value="<%= user._id %>"><%= user.email %></option>
+            <% }); %>
+          </select>
+
+          <button type="submit">Crea Gruppo</button>
+        </form>
+      </section>
+
+      <!-- Existing Groups -->
+      <section class="admin-form-section">
+        <h2 class="groups-title">Gruppi Esistenti</h2>
+        <ul class="group-list">
+          <% groups.forEach(function(group) { %>
+            <li>
+              <strong><%= group.name %></strong>
+              <ul>
+                <% group.members.forEach(function(member) { %>
+                  <li>
+                    <%= member.email %>
+                    <button onclick="removeMember('<%= group._id %>', '<%= member._id %>')">Rimuovi</button>
+                  </li>
+                <% }); %>
+              </ul>
+              <button onclick="openEditGroup('<%= group._id %>', '<%= group.name %>', <%= JSON.stringify(group.members) %>)">Modifica Gruppo</button>
+            </li>
+          <% }); %>
+        </ul>
+      </section>
+
+      <!-- Edit Group Card -->
+      <section id="editGroupCard" class="edit-group-card" style="display: none;">
+        <div class="edit-group-card-content">
+          <h2>Modifica Gruppo</h2>
+          <label for="editGroupName">Nome Gruppo:</label>
+          <input type="text" id="editGroupName">
+
+          <div class="user-list-container">
+            <!-- Lista utenti non nel gruppo -->
+            <div class="user-list" id="availableUsers">
+              <h3>Utenti Non Nel Gruppo</h3>
+                <% users.forEach(function(user) { 
+                  if (!group.members.some(member => member._id === user._id)) { %>
+                    <div class="user-item" draggable="true" ondragstart="drag(event)" id="user-<%= user._id %>">
+                      <span><%= user.email %></span>
+                    </div>
+                  <% } 
+                }); %>
+            </div>
+
+            <!-- Lista utenti nel gruppo -->
+            <div class="user-list" id="groupMembers">
+              <h3>Utenti Nel Gruppo</h3>
+              <!-- Membri già nel gruppo verranno aggiunti qui tramite drag-and-drop -->
+            </div>
+          </div>
+
+          <button onclick="saveChanges()">Salva Modifiche</button>
+          <button class="cancel-btn" onclick="closeEditGroup()">Annulla</button>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script type="text/javascript">
+    // Gestione del pagamento
+    const userOrGroupSelect = document.getElementById('userOrGroup');
+    const userSelect = document.getElementById('userSelect');
+    const groupSelect = document.getElementById('groupSelect');
+
+    userOrGroupSelect.addEventListener('change', function() {
+      if (this.value === 'user') {
+        userSelect.style.display = 'block';
+        groupSelect.style.display = 'none';
+      } else {
+        userSelect.style.display = 'none';
+        groupSelect.style.display = 'block';
+      }
+    });
+
+    // Rimuovere un membro dal gruppo
+    function removeMember(groupId, memberId) {
+      if (confirm("Sei sicuro di voler rimuovere questo membro?")) {
+        fetch(`/admin/groups/${groupId}/remove-member`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ memberId: memberId })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert("Membro rimosso con successo!");
+            location.reload();
+          } else {
+            alert("Errore nel rimuovere il membro.");
+          }
+        })
+        .catch(err => {
+          alert("Errore di connessione.");
+        });
+      }
+    }
+
+    // Modifica gruppo
+    function openEditGroup(groupId, groupName, groupMembers) {
+      document.getElementById('editGroupCard').style.display = 'flex';
+      document.getElementById('editGroupName').value = groupName;
+
+      const groupMembersContainer = document.getElementById('groupMembers');
+      groupMembersContainer.innerHTML = ''; // Clear current members
+
+      // Pre-add existing members to the group list
+      groupMembers.forEach(member => {
+        const memberItem = document.createElement('div');
+        memberItem.classList.add('user-item');
+        memberItem.innerHTML = `<span>${member.email}</span>`;
+        groupMembersContainer.appendChild(memberItem);
+      });
+    }
+
+    function closeEditGroup() {
+      document.getElementById('editGroupCard').style.display = 'none';
+    }
+
+    function saveChanges() {
+      const groupName = document.getElementById('editGroupName').value;
+      const groupMembers = [...document.querySelectorAll('#groupMembers .user-item')].map(item => item.id.split('-')[1]);
+
+      fetch('/admin/groups/edit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          groupName: groupName,
+          groupMembers: groupMembers
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert("Gruppo aggiornato con successo!");
+          location.reload();
+        } else {
+          alert("Errore nell'aggiornamento del gruppo.");
+        }
+      })
+      .catch(err => {
+        alert("Errore di connessione.");
+      });
+    }
+
+    // Funzioni per il drag-and-drop
+    function drag(event) {
+      event.dataTransfer.setData("text", event.target.id);
+    }
+
+    function drop(event) {
+      event.preventDefault();
+      const data = event.dataTransfer.getData("text");
+      const droppedElement = document.getElementById(data);
+      event.target.appendChild(droppedElement);
+    }
+
+    function allowDrop(event) {
+      event.preventDefault();
+    }
+  </script>
+</body>
+
+</html>

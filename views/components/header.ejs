@@ -5,20 +5,20 @@
         <img src="img/logo.png">
       </a>
       
-      <form action="/story">
+      <form action="/story" method="get">
         <button class="button-common" >Storia</button>
       </form>
       
-      <form action="/events">
+      <form action="/events" method="get">
         <button class="button-common">Eventi</button>
       </form>
-      <form action="/branche">
+      <form action="/branche" method="get">
         <button class="button-common-list">Branche </button>
       </form>
 
       <div class="header-right">
         <% if (user == null) { %>
-          <form action="/login">
+          <form action="/login" method="get">
             <button class="button-common-list" type="submit">Login </button>
           </form>
         <% } else { %>
@@ -29,9 +29,6 @@
             <div class="dropdown-content">
               <form action="/profile" method="get">
                 <button type="submit">Profilo</button>
-              </form>
-              <form action="/profile/payements" method="get">
-                <button type="submit">Pagamenti</button>
               </form>
               <% if (user.admin == true) { %>
                 <form action="/admin" method="get">

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script type="text/javascript">
+        // Verifica se la variabile `user` non è nulla
+        <% if (user == null) { %>
+          window.location.href = '/';  // Sostituisci '/home' con il percorso della tua home
+        <% } %>
+    </script>
+
+    <%- include('../../components/head'); %>
+
+    <style>
+      /* Stili generali della pagina */
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f9;
+        margin: 0;
+        padding: 0;
+      }
+
+      header, footer {
+        background-color: #333;
+        color: white;
+        padding: 10px 0;
+        text-align: center;
+      }
+
+      .container {
+        width: 80%;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+
+      section {
+        margin-top: 20px;
+      }
+
+      /* Stili per la tabella */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      table th, table td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+
+      table th {
+        background-color: #f6c42f;
+        color: white;
+      }
+
+      table tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+
+      table tr:hover {
+        background-color: #f1f1f1;
+      }
+
+      /* Stile per lo stato del pagamento */
+      .pagato {
+        color: green;
+        font-weight: bold;
+      }
+
+      .da-pagare {
+        color: red;
+        font-weight: bold;
+      }
+
+      /* Stile per i messaggi */
+      p {
+        text-align: center;
+        font-size: 1.2em;
+        color: #555;
+      }
+    </style>
+  </head>
+  <body>
+
+    <header>
+      <%- include('../../components/header'); %>
+    </header>
+    
+    <main>
+      <div class="container">
+        <h1>Profilo di <%= user.email %></h1>
+        <section>
+          <h2>Pagamenti Necessari</h2>
+
+          <% if (pagamenti.length > 0) { %>
+          <table>
+              <thead>
+              <tr>
+                  <th>Descrizione</th>
+                  <th>Importo</th>
+                  <th>Scadenza</th>
+                  <th>Stato</th>
+              </tr>
+              </thead>
+              <tbody>
+              <% pagamenti.forEach(pagamento => { %>
+                  <tr>
+                  <td><%= pagamento.descrizione %></td>
+                  <td>€ <%= pagamento.importo.toFixed(2) %></td>
+                  <td><%= pagamento.scadenza.toLocaleDateString() %></td>
+                  <td class="<%= pagamento.pagato ? 'pagato' : 'da-pagare' %>">
+                      <% if (pagamento.pagato) { %>
+                      ✅ Pagato
+                      <% } else { %>
+                      ❌ Da pagare
+                      <% } %>
+                  </td>
+                  </tr>
+              <% }) %>
+              </tbody>
+          </table>
+          <% } else { %>
+          <p>Nessun pagamento necessario.</p>
+          <% } %>
+      </section>
+      </div>
+    </main>
+
+    <footer>
+      <%- include('../../components/footer'); %>
+    </footer>
+
+  </body>
+</html>
