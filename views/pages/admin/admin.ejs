@@ -36,7 +36,7 @@
     }
 
     .admin-form {
-      background-color: white;
+      background-color: rgb(24, 26, 27);
       padding: 20px;
       margin: 20px 0;
       border-radius: 8px;
@@ -47,8 +47,10 @@
       font-weight: bold;
       display: block;
       margin-bottom: 5px;
-      color: #333;
+      color: rgb(200, 195, 188);
     }
+
+  
 
     .admin-form input,
     .admin-form select,
@@ -59,6 +61,9 @@
       border: 1px solid #ccc;
       border-radius: 4px;
       font-size: 16px;
+      border-color: rgb(62, 68, 70);
+      background-color: rgb(15, 17, 17);
+      color: #ccc;
     }
 
     .admin-form button {
@@ -278,157 +283,38 @@
                 <% group.members.forEach(function(member) { %>
                   <li>
                     <%= member.email %>
-                    <button onclick="removeMember('<%= group._id %>', '<%= member._id %>')">Rimuovi</button>
+                    <form action="/remove-user-group">
+                      <input type="hidden" name="groupId" value="<%= group._id %>">
+                      <input type="hidden" name="userId" value="<%= member._id %>">
+                      <button type="submit">Rimuovi</button>
+                    </form>
                   </li>
                 <% }); %>
               </ul>
-              <button onclick="openEditGroup('<%= group._id %>', '<%= group.name %>', <%= JSON.stringify(group.members) %>)">Modifica Gruppo</button>
             </li>
           <% }); %>
         </ul>
       </section>
 
-      <!-- Edit Group Card -->
-      <section id="editGroupCard" class="edit-group-card" style="display: none;">
-        <div class="edit-group-card-content">
-          <h2>Modifica Gruppo</h2>
-          <label for="editGroupName">Nome Gruppo:</label>
-          <input type="text" id="editGroupName">
-
-          <div class="user-list-container">
-            <!-- Lista utenti non nel gruppo -->
-            <div class="user-list" id="availableUsers">
-              <h3>Utenti Non Nel Gruppo</h3>
-                <% users.forEach(function(user) { 
-                  if (!group.members.some(member => member._id === user._id)) { %>
-                    <div class="user-item" draggable="true" ondragstart="drag(event)" id="user-<%= user._id %>">
-                      <span><%= user.email %></span>
-                    </div>
-                  <% } 
-                }); %>
-            </div>
-
-            <!-- Lista utenti nel gruppo -->
-            <div class="user-list" id="groupMembers">
-              <h3>Utenti Nel Gruppo</h3>
-              <!-- Membri già nel gruppo verranno aggiunti qui tramite drag-and-drop -->
-            </div>
-          </div>
-
-          <button onclick="saveChanges()">Salva Modifiche</button>
-          <button class="cancel-btn" onclick="closeEditGroup()">Annulla</button>
-        </div>
-      </section>
+      <script type="text/javascript">
+        const userOrGroupSelect = document.getElementById('userOrGroup');
+        const userSelect = document.getElementById('userSelect');
+        const groupSelect = document.getElementById('groupSelect');
+    
+        userOrGroupSelect.addEventListener('change', function() {
+          if (this.value === 'user') {
+            userSelect.style.display = 'block';
+            groupSelect.style.display = 'none';
+          } else {
+            userSelect.style.display = 'none';
+            groupSelect.style.display = 'block';
+          }
+        });
+      </script>
 
     </div>
   </main>
 
-  <script type="text/javascript">
-    // Gestione del pagamento
-    const userOrGroupSelect = document.getElementById('userOrGroup');
-    const userSelect = document.getElementById('userSelect');
-    const groupSelect = document.getElementById('groupSelect');
-
-    userOrGroupSelect.addEventListener('change', function() {
-      if (this.value === 'user') {
-        userSelect.style.display = 'block';
-        groupSelect.style.display = 'none';
-      } else {
-        userSelect.style.display = 'none';
-        groupSelect.style.display = 'block';
-      }
-    });
-
-    // Rimuovere un membro dal gruppo
-    function removeMember(groupId, memberId) {
-      if (confirm("Sei sicuro di voler rimuovere questo membro?")) {
-        fetch(`/admin/groups/${groupId}/remove-member`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ memberId: memberId })
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            alert("Membro rimosso con successo!");
-            location.reload();
-          } else {
-            alert("Errore nel rimuovere il membro.");
-          }
-        })
-        .catch(err => {
-          alert("Errore di connessione.");
-        });
-      }
-    }
-
-    // Modifica gruppo
-    function openEditGroup(groupId, groupName, groupMembers) {
-      document.getElementById('editGroupCard').style.display = 'flex';
-      document.getElementById('editGroupName').value = groupName;
-
-      const groupMembersContainer = document.getElementById('groupMembers');
-      groupMembersContainer.innerHTML = ''; // Clear current members
-
-      // Pre-add existing members to the group list
-      groupMembers.forEach(member => {
-        const memberItem = document.createElement('div');
-        memberItem.classList.add('user-item');
-        memberItem.innerHTML = `<span>${member.email}</span>`;
-        groupMembersContainer.appendChild(memberItem);
-      });
-    }
-
-    function closeEditGroup() {
-      document.getElementById('editGroupCard').style.display = 'none';
-    }
-
-    function saveChanges() {
-      const groupName = document.getElementById('editGroupName').value;
-      const groupMembers = [...document.querySelectorAll('#groupMembers .user-item')].map(item => item.id.split('-')[1]);
-
-      fetch('/admin/groups/edit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          groupName: groupName,
-          groupMembers: groupMembers
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          alert("Gruppo aggiornato con successo!");
-          location.reload();
-        } else {
-          alert("Errore nell'aggiornamento del gruppo.");
-        }
-      })
-      .catch(err => {
-        alert("Errore di connessione.");
-      });
-    }
-
-    // Funzioni per il drag-and-drop
-    function drag(event) {
-      event.dataTransfer.setData("text", event.target.id);
-    }
-
-    function drop(event) {
-      event.preventDefault();
-      const data = event.dataTransfer.getData("text");
-      const droppedElement = document.getElementById(data);
-      event.target.appendChild(droppedElement);
-    }
-
-    function allowDrop(event) {
-      event.preventDefault();
-    }
-  </script>
 </body>
 
 </html>
