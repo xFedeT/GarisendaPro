@@ -1,7 +1,7 @@
 // Importa il modello Pagamento
 const Pagamento = require('./models/pagamento');
 
-module.exports = function(app, passport) {
+module.exports = function(app, passport, stripe) {
 
     const User = require('./models/user');
     const Group = require('./models/branca');
@@ -109,33 +109,75 @@ module.exports = function(app, passport) {
                 ]
             });
     
-            res.render('pages/profile/profile', { user: req.user, pagamenti: pagamenti });
+            res.render('pages/profile/profile', { user: req.user, pagamenti: pagamenti, key: process.env.PUBLISHABLE_KEY });
         } catch (error) {
             console.error("Errore durante il recupero dei pagamenti:", error);
             res.status(500).send("Errore nel recupero dei pagamenti.");
         }
     });
 
+    app.post('/payment', async function (req, res) {
+        const session = await stripe.checkout.sessions.create({
+            line_items: [
+                {
+                    price_data: {
+                        currency: 'eur',
+                        product_data: {
+                            name: req.body.descrizione
+                        },
+                        unit_amount: req.body.amount * 100
+                    },
+                    quantity: 1
+                }         
+            ],
+            mode: 'payment',
+            success_url: `${process.env.BASE_URL}/complete?session_id={CHECKOUT_SESSION_ID}&payementId=${req.body.id}`,
+            cancel_url: `${process.env.BASE_URL}/cancel`
+        })
+    
+        res.redirect(session.url)
+    })
+
+    app.get('/complete', async (req, res) => {
+        const result = Promise.all([
+            stripe.checkout.sessions.retrieve(req.query.session_id, { expand: ['payment_intent.payment_method'] }),
+            stripe.checkout.sessions.listLineItems(req.query.session_id)
+        ])
+
+        if (!req.user.pagamentiEffettuati.includes(req.query.payementId)) {
+            req.user.pagamentiEffettuati.push(req.query.payementId);  
+            await req.user.save();  
+        }
+    
+        console.log(JSON.stringify(await result))
+    
+        res.redirect('/profile')
+    })
+
+    app.get('/cancel', (req, res) => {
+        res.redirect('/')
+    })
+
     // Rotta per ottenere gli utenti non appartenenti al gruppo
-app.get('/admin/get-users-not-in-group/:groupId', isAdmin, async function(req, res) {
-    const groupId = req.params.groupId;
+    app.get('/admin/get-users-not-in-group/:groupId', isAdmin, async function(req, res) {
+        const groupId = req.params.groupId;
 
-    try {
-        // Recupera il gruppo
-        const group = await Group.findById(groupId).populate('members');
+        try {
+            // Recupera il gruppo
+            const group = await Group.findById(groupId).populate('members');
 
-        // Ottieni gli ID degli utenti già nel gruppo
-        const memberIds = group.members.map(member => member._id);
+            // Ottieni gli ID degli utenti già nel gruppo
+            const memberIds = group.members.map(member => member._id);
 
-        // Recupera gli utenti che NON appartengono al gruppo
-        const users = await User.find({ _id: { $nin: memberIds } });
+            // Recupera gli utenti che NON appartengono al gruppo
+            const users = await User.find({ _id: { $nin: memberIds } });
 
-        res.json(users);
-    } catch (error) {
-        console.error("Errore nel recupero degli utenti non nel gruppo:", error);
-        res.status(500).send("Errore nel recupero degli utenti.");
-    }
-});
+            res.json(users);
+        } catch (error) {
+            console.error("Errore nel recupero degli utenti non nel gruppo:", error);
+            res.status(500).send("Errore nel recupero degli utenti.");
+        }
+    });
 
 
     app.post('/admin/groups', isAdmin, async function(req, res) {

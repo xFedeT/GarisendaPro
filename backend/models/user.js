@@ -6,7 +6,12 @@ var bcrypt   = require('bcrypt-nodejs');
 const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    admin: { type: Boolean, required: true}
+    admin: { type: Boolean, required: true},
+    pagamentiEffettuati: { 
+        type: [mongoose.Schema.Types.ObjectId], 
+        ref: 'Pagamento', 
+        default: []
+    }
 });
 
 // generating a hash

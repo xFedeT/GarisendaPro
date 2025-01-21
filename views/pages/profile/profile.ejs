@@ -112,16 +112,22 @@
               <tbody>
               <% pagamenti.forEach(pagamento => { %>
                   <tr>
-                  <td><%= pagamento.descrizione %></td>
-                  <td>€ <%= pagamento.importo.toFixed(2) %></td>
-                  <td><%= pagamento.scadenza.toLocaleDateString() %></td>
-                  <td class="<%= pagamento.pagato ? 'pagato' : 'da-pagare' %>">
-                      <% if (pagamento.pagato) { %>
-                      ✅ Pagato
-                      <% } else { %>
-                      ❌ Da pagare
-                      <% } %>
-                  </td>
+                    <td><%= pagamento.descrizione %></td>
+                    <td>€ <%= pagamento.importo.toFixed(2) %></td>
+                    <td><%= pagamento.scadenza.toLocaleDateString() %></td>
+                    <td class="<%= pagamento.pagato ? 'pagato' : 'da-pagare' %>">
+                        <% if (user.pagamentiEffettuati.includes(pagamento._id)) { %>
+                        ✅ Pagato
+                        <% } else { %>
+                        ❌ Da pagare
+                        <form action="/payment" method="POST" class="payment-form">
+                          <input type="hidden" name="amount" value="<%= pagamento.importo %>">
+                          <input type="hidden" name="descrizione" value="<%= pagamento.descrizione %>">
+                          <input type="hidden" name="id" value="<%= pagamento._id %>">
+                          <button type="submit">Paga ora</button>
+                        </form>
+                        <% } %>
+                    </td>
                   </tr>
               <% }) %>
               </tbody>

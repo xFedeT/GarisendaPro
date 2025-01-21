@@ -2,6 +2,7 @@ var express  = require('express');
 var app      = express();
 require('dotenv').config()
 
+var stripe = require('stripe')(process.env.STRIPE_KEY);
 var port     = process.env.PORT || 8080;
 var mongoose = require('mongoose');
 var passport = require('passport');
@@ -38,7 +39,7 @@ app.use(passport.session()); // persistent login sessions
 app.use(flash());
 
 // use res.render to load up an ejs view file
-require('./backend/routes.js')(app, passport);
+require('./backend/routes.js')(app, passport, stripe);
 
 app.listen(port);
 console.log('The magic happens on port ' + port);
