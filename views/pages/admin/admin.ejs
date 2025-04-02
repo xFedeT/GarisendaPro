@@ -11,6 +11,55 @@
   <%- include('../../components/head'); %>
 
   <style>
+    form[action*="add-user"] {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    form[action*="add-user"] select {
+        flex: 1;
+        padding: 8px;
+        background: #2a2a2a;
+        border: 1px solid #444;
+        color: #fff;
+    }
+
+    .group-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .group-card {
+        background: #1e1e1e;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #333;
+    }
+
+    .member-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px;
+        margin: 5px 0;
+        background: #2a2a2a;
+        border-radius: 4px;
+    }
+
+    .btn-remove {
+        background: #ff4444;
+        border: none;
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+    }
+
     .admin-dashboard {
       font-family: Arial, sans-serif;
       background-color: #f4f4f9;
@@ -223,34 +272,41 @@
       <section class="admin-form-section">
         <h2 class="payment-title">Aggiungi Pagamento</h2>
         <form action="/admin/payments" method="POST" class="admin-form">
-          <label for="amount">Importo:</label>
-          <input type="number" name="amount" id="amount" required>
-
-          <label for="userOrGroup">Assegna a:</label>
-          <select name="userOrGroup" id="userOrGroup" required>
-            <option value="user">Singolo Utente</option>
-            <option value="group">Gruppo</option>
+          <label>Descrizione:</label>
+          <input type="text" name="descrizione" required>
+          
+          <label>Importo:</label>
+          <input type="number" name="importo" step="0.01" required>
+          
+          <label>Scadenza:</label>
+          <input type="date" name="scadenza" required>
+          
+          <label>Assegna a:</label>
+          <select name="assignedTo" id="targetType">
+              <option value="all">Tutti</option>
+              <option value="individual">Singolo Utente</option>
+              <option value="group">Gruppo</option>
           </select>
-
-          <div id="userSelect" style="display: none;">
-            <label for="user">Seleziona Utente:</label>
-            <select name="user" id="user">
-              <% users.forEach(function(user) { %>
-                <option value="<%= user._id %>"><%= user.email %></option>
-              <% }); %>
-            </select>
+      
+          <div id="userSelect" style="display:none;">
+              <label>Utente:</label>
+              <select name="userId">
+                  <% users.forEach(user => { %>
+                      <option value="<%= user._id %>"><%= user.email %></option>
+                  <% }) %>
+              </select>
           </div>
-
-          <div id="groupSelect" style="display: none;">
-            <label for="group">Seleziona Gruppo:</label>
-            <select name="group" id="group">
-              <% groups.forEach(function(group) { %>
-                <option value="<%= group._id %>"><%= group.name %></option>
-              <% }); %>
-            </select>
+      
+          <div id="groupSelect" style="display:none;">
+              <label>Gruppo:</label>
+              <select name="groupId">
+                  <% groups.forEach(group => { %>
+                      <option value="<%= group._id %>"><%= group.name %></option>
+                  <% }) %>
+              </select>
           </div>
-
-          <button type="submit">Aggiungi Pagamento</button>
+      
+          <button type="submit">Crea Pagamento</button>
         </form>
       </section>
 
@@ -275,28 +331,43 @@
       <!-- Existing Groups -->
       <section class="admin-form-section">
         <h2 class="groups-title">Gruppi Esistenti</h2>
-        <ul class="group-list">
-          <% groups.forEach(function(group) { %>
-            <li>
-              <strong><%= group.name %></strong>
-              <ul>
-                <% group.members.forEach(function(member) { %>
-                  <li>
-                    <%= member.email %>
-                    <form action="/remove-user-group">
-                      <input type="hidden" name="groupId" value="<%= group._id %>">
-                      <input type="hidden" name="userId" value="<%= member._id %>">
-                      <button type="submit">Rimuovi</button>
+        <div class="group-grid">
+            <% groups.forEach(group => { %>
+                <div class="group-card">
+                    <h3><%= group.name %></h3>
+                    <div class="member-list">
+                        <% group.members.forEach(member => { %>
+                            <div class="member-item">
+                                <%= member.email %>
+                                <form action="/admin/groups/<%= group._id %>/remove-user" method="POST">
+                                    <input type="hidden" name="userId" value="<%= member._id %>">
+                                    <button type="submit" class="btn-remove">×</button>
+                                </form>
+                            </div>
+                        <% }) %>
+                    </div>
+                    <form action="/admin/groups/<%= group._id %>/add-user" method="POST">
+                      <select name="userId">
+                          <% users.forEach(user => { %>
+                              <% if (!group.members.some(m => m.equals(user._id))) { %>
+                                  <option value="<%= user._id %>"><%= user.email %></option>
+                              <% } %>
+                          <% }) %>
+                      </select>
+                      <button type="submit">Aggiungi</button>
                     </form>
-                  </li>
-                <% }); %>
-              </ul>
-            </li>
-          <% }); %>
-        </ul>
+                </div>
+            <% }) %>
+        </div>
       </section>
 
       <script type="text/javascript">
+        document.getElementById('targetType').addEventListener('change', function() {
+          const type = this.value;
+          document.getElementById('userSelect').style.display = type === 'individual' ? 'block' : 'none';
+          document.getElementById('groupSelect').style.display = type === 'group' ? 'block' : 'none';
+        });
+
         const userOrGroupSelect = document.getElementById('userOrGroup');
         const userSelect = document.getElementById('userSelect');
         const groupSelect = document.getElementById('groupSelect');

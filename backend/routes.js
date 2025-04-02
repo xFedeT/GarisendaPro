@@ -59,11 +59,54 @@ module.exports = function(app, passport, stripe) {
         }
     });
 
+    app.post('/admin/groups/:groupId/remove-user', isAdmin, async (req, res) => {
+        try {
+            await Group.findByIdAndUpdate(
+                req.params.groupId,
+                { $pull: { members: req.body.userId } }
+            );
+            req.flash('success', 'Utente rimosso');
+        } catch (error) {
+            req.flash('error', 'Errore nella rimozione');
+        }
+        res.redirect('/admin');
+    });
+
     // Rotta per creare un gruppo
     app.post('/admin/groups', isAdmin, async function(req, res) {
-        const { name, members } = req.body;
-        const newGroup = new Group({ name, members });
-        await newGroup.save();
+        try {
+            const { name, members } = req.body;
+            
+            // Validazione solo sul nome
+            if (!name) {
+                req.flash('error', 'Il nome del gruppo è obbligatorio!');
+                return res.redirect('/admin');
+            }
+    
+            // Gestione membri (può essere undefined/null/array)
+            const membersArray = Array.isArray(members) ? members : [];
+            const membersIds = membersArray.map(id => mongoose.Types.ObjectId(id));
+    
+            // Rimuovi utenti se presenti
+            if(membersIds.length > 0) {
+                await Group.updateMany(
+                    { members: { $in: membersIds } },
+                    { $pull: { members: { $in: membersIds } } }
+                );
+            }
+    
+            // Crea nuovo gruppo
+            const newGroup = new Group({
+                name,
+                members: membersIds
+            });
+    
+            await newGroup.save();
+            req.flash('success', 'Gruppo creato con successo!');
+        } catch (error) {
+            console.error('Errore creazione gruppo:', error);
+            req.flash('error', `Errore: ${error.message}`);
+        }
         res.redirect('/admin');
     });
 
@@ -180,28 +223,33 @@ module.exports = function(app, passport, stripe) {
     });
 
 
-    app.post('/admin/groups', isAdmin, async function(req, res) {
-        const { name, members } = req.body;
-        
-        // Verifica che il nome del gruppo sia fornito
-        if (!name || !members) {
-            req.flash('error', 'Nome del gruppo e membri devono essere forniti!');
-            return res.redirect('/admin');
-        }
     
+    app.post('/admin/groups/:groupId/add-user', isAdmin, async function(req, res) {
         try {
-            const membersArray = members.map(memberId => mongoose.Types.ObjectId(memberId)); // Converti gli ID degli utenti in ObjectId
-            const newGroup = new Group({ name, members: membersArray });
+            const { groupId } = req.params;
+            const { userId } = req.body;
     
-            await newGroup.save();
-            res.redirect('/admin');
+            // Rimuovi l'utente da tutti gli altri gruppi
+            await Group.updateMany(
+                { members: userId },
+                { $pull: { members: userId } }
+            );
+    
+            // Aggiungi al nuovo gruppo
+            await Group.findByIdAndUpdate(
+                groupId,
+                { $addToSet: { members: userId } }
+            );
+    
+            req.flash('success', 'Utente aggiunto al gruppo');
         } catch (error) {
-            console.error('Errore durante la creazione del gruppo:', error);
-            req.flash('error', 'Errore nella creazione del gruppo!');
-            res.redirect('/admin');
+            console.error('Errore:', error);
+            req.flash('error', 'Operazione fallita');
         }
+        res.redirect('/admin');
     });
     
+
     // Rotta per modificare i membri di un gruppo
     app.post('/admin/groups/:groupId/edit', isAdmin, async function(req, res) {
         const groupId = req.params.groupId;
