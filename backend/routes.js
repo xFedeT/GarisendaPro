@@ -1,7 +1,7 @@
 // Importa il modello Pagamento
 const Pagamento = require('./models/pagamento');
 
-module.exports = function(app, passport, stripe) {
+module.exports = function(app, passport, stripe, mongoose) {
 
     const User = require('./models/user');
     const Group = require('./models/branca');
@@ -18,7 +18,7 @@ module.exports = function(app, passport, stripe) {
                 user: req.user, 
                 groups: groups, 
                 payments: payments,
-                users: users  // Passa gli utenti alla vista
+                members: users  // Passa gli utenti alla vista
             });
         } catch (err) {
             console.error(err);
@@ -75,36 +75,43 @@ module.exports = function(app, passport, stripe) {
     // Rotta per creare un gruppo
     app.post('/admin/groups', isAdmin, async function(req, res) {
         try {
-            const { name, members } = req.body;
+            const { groupName, members } = req.body;
             
+            console.log("IN PRINCIPIO!");
+
             // Validazione solo sul nome
-            if (!name) {
+            if (!groupName) {
                 req.flash('error', 'Il nome del gruppo è obbligatorio!');
+                console.log("IL NOME DI MERDA!");
                 return res.redirect('/admin');
             }
+
+            console.log("CI ARRIVO A!");
+
     
             // Gestione membri (può essere undefined/null/array)
             const membersArray = Array.isArray(members) ? members : [];
-            const membersIds = membersArray.map(id => mongoose.Types.ObjectId(id));
+            const membersIds = membersArray.map(id => new mongoose.Types.ObjectId(id));
     
-            // Rimuovi utenti se presenti
-            if(membersIds.length > 0) {
-                await Group.updateMany(
-                    { members: { $in: membersIds } },
-                    { $pull: { members: { $in: membersIds } } }
-                );
-            }
-    
+            console.log("CI ARRIVO B!");
+
             // Crea nuovo gruppo
             const newGroup = new Group({
-                name,
+                name: groupName,
                 members: membersIds
             });
+
+            console.log("CI ARRIVO C!");
     
             await newGroup.save();
+
+            console.log("CI ARRIVO D!");
+
             req.flash('success', 'Gruppo creato con successo!');
         } catch (error) {
             console.error('Errore creazione gruppo:', error);
+            console.log("CI ARRIVO MALE!");
+
             req.flash('error', `Errore: ${error.message}`);
         }
         res.redirect('/admin');

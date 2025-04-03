@@ -33,6 +33,7 @@
 
     .group-card {
         background: #1e1e1e;
+        color: white;
         padding: 15px;
         border-radius: 8px;
         border: 1px solid #333;
@@ -291,7 +292,7 @@
           <div id="userSelect" style="display:none;">
               <label>Utente:</label>
               <select name="userId">
-                  <% users.forEach(user => { %>
+                  <% members.forEach(user => { %>
                       <option value="<%= user._id %>"><%= user.email %></option>
                   <% }) %>
               </select>
@@ -317,9 +318,9 @@
           <label for="groupName">Nome del Gruppo:</label>
           <input type="text" name="groupName" id="groupName" required>
 
-          <label for="users">Aggiungi Membri al Gruppo:</label>
-          <select multiple name="users[]" id="users" required>
-            <% users.forEach(function(user) { %>
+          <label for="members">Aggiungi Membri al Gruppo:</label>
+          <select multiple name="members[]" id="members" required>
+            <% members.forEach(function(user) { %>
               <option value="<%= user._id %>"><%= user.email %></option>
             <% }); %>
           </select>
@@ -348,7 +349,7 @@
                     </div>
                     <form action="/admin/groups/<%= group._id %>/add-user" method="POST">
                       <select name="userId">
-                          <% users.forEach(user => { %>
+                          <% members.forEach(user => { %>
                               <% if (!group.members.some(m => m.equals(user._id))) { %>
                                   <option value="<%= user._id %>"><%= user.email %></option>
                               <% } %>

@@ -39,7 +39,7 @@ app.use(passport.session()); // persistent login sessions
 app.use(flash());
 
 // use res.render to load up an ejs view file
-require('./backend/routes.js')(app, passport, stripe);
+require('./backend/routes.js')(app, passport, stripe, mongoose);
 
 app.listen(port);
 console.log('The magic happens on port ' + port);
